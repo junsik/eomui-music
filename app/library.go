@@ -373,7 +373,7 @@ func (l *Library) hasPath(path string) bool {
         defer l.mu.Unlock()
 
         for i := range l.entries {
-                if strings.EqualFold(l.entries[i].Path, path) {
+                if samePath(l.entries[i].Path, path) {
                         return true
                 }
         }
