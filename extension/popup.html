@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Malgun Gothic", "맑은 고딕", sans-serif;
+      width: 320px;
+      padding: 20px;
+      background: linear-gradient(180deg, #fff1f2 0%, #ffffff 100%);
+      color: #1a1a1a;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 16px;
+    }
+    .header-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: #e11d48;
+      color: white;
+      font-size: 24px;
+      margin-bottom: 8px;
+      box-shadow: 0 4px 12px rgba(225, 29, 72, 0.3);
+    }
+    h1 {
+      font-size: 18px;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+    h1 span { color: #e11d48; }
+    .subtitle {
+      font-size: 13px;
+      color: #666;
+    }
+    .card {
+      background: white;
+      border: 1px solid #fecdd3;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+    .status-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .dot.online { background: #16a34a; box-shadow: 0 0 6px #16a34a; }
+    .dot.offline { background: #dc2626; box-shadow: 0 0 6px #dc2626; }
+    .dot.checking { background: #f59e0b; animation: pulse 1s infinite; }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+    .desc {
+      font-size: 13px;
+      color: #555;
+      line-height: 1.5;
+      margin-top: 8px;
+    }
+    .desc b { color: #e11d48; }
+    .steps {
+      font-size: 13px;
+      color: #444;
+      line-height: 1.6;
+    }
+    .steps ol {
+      padding-left: 20px;
+    }
+    .steps li {
+      margin-bottom: 4px;
+    }
+    .footer {
+      text-align: center;
+      font-size: 11px;
+      color: #999;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-icon">&#9835;</div>
+    <h1>어무이 <span>음악 다운로더</span></h1>
+    <div class="subtitle">YouTube 영상을 MP3로</div>
+  </div>
+
+  <div class="card">
+    <div class="status-row">
+      <div class="dot checking" id="status-dot"></div>
+      <span id="status-text">서버 확인 중...</span>
+    </div>
+    <div class="desc" id="status-desc">
+      어무이 음악 다운로더 프로그램이 실행 중인지 확인합니다.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="steps">
+      <b>사용 방법:</b>
+      <ol>
+        <li>어무이 음악 다운로더 프로그램을 실행합니다.</li>
+        <li>YouTube에서 원하는 영상을 엽니다.</li>
+        <li>영상 하단 <b style="color:#e11d48;">좋아요/공유 버튼 옆</b>의 <b style="color:#e11d48;">MP3 다운로드</b> 버튼을 누릅니다.</li>
+        <li>완료! 파일이 자동으로 바탕화면에 저장됩니다.</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="footer">
+    v1.0.0 &middot; 광고 없음 &middot; 개인 사용용
+  </div>
+
+  <script>
+    const SERVER_URL = "http://localhost:8080";
+    const dot = document.getElementById("status-dot");
+    const text = document.getElementById("status-text");
+    const desc = document.getElementById("status-desc");
+
+    async function checkServer() {
+      try {
+        const resp = await fetch(SERVER_URL + "/", { method: "GET" });
+        if (resp.ok) {
+          dot.className = "dot online";
+          text.textContent = "서버 연결됨";
+          desc.innerHTML = "준비 완료! YouTube 페이지에서 <b>MP3 다운로드</b> 버튼을 누르세요.";
+        } else {
+          throw new Error("Bad status");
+        }
+      } catch (err) {
+        dot.className = "dot offline";
+        text.textContent = "서버 연결 안 됨";
+        desc.innerHTML = "어무이 음악 다운로더 프로그램이 실행되고 있지 않습니다.<br><br>프로그램을 더블클릭으로 실행한 후 다시 시도해 주세요.";
+      }
+    }
+
+    checkServer();
+    // 5초마다 재확인
+    setInterval(checkServer, 5000);
+  </script>
+</body>
+</html>

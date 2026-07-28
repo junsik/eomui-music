@@ -1,0 +1,234 @@
+/* ============================================================
+   어무이 음악 다운로더 - Content Script Styles
+   YouTube 액션바(좋아요/공유 옆)에 inline으로 삽입되는 버튼
+   ============================================================ */
+
+/* ===== MP3 다운로드 버튼 (YouTube 액션바 inline) ===== */
+#eomui-mp3-button.eomui-action-btn {
+  /* YouTube native button style — inline, pill-shaped */
+  position: relative !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+
+  /* 시니어 친화적 크기 — YouTube native buttons (~36-40px)보다 약간 큼 */
+  height: 42px !important;
+  min-width: 160px !important;
+  padding: 0 20px !important;
+  margin: 0 0 0 8px !important;
+
+  border: none !important;
+  border-radius: 18px !important;
+
+  /* 시니어 친화적 색상 — 진한 빨강 (회색 버튼 사이에서 눈에 뜀) */
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
+  color: white !important;
+
+  /* 시니어 친화적 폰트 */
+  font-family: "Malgun Gothic", "맑은 고딕", "YouTube Sans", "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.3px !important;
+
+  cursor: pointer !important;
+  user-select: none !important;
+  white-space: nowrap !important;
+  vertical-align: middle !important;
+
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.35) !important;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease !important;
+
+  /* 부드러운 펄스 (다른 버튼들 사이에서 눈에 뜨도록) */
+  animation: eomui-pulse 2.6s ease-in-out infinite !important;
+}
+
+#eomui-mp3-button.eomui-action-btn:hover {
+  transform: scale(1.03) !important;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.5) !important;
+}
+
+#eomui-mp3-button.eomui-action-btn:active {
+  transform: scale(0.97) !important;
+}
+
+#eomui-mp3-button.eomui-action-btn:disabled {
+  cursor: not-allowed !important;
+  animation: none !important;
+}
+
+#eomui-mp3-button.eomui-action-btn svg {
+  flex-shrink: 0 !important;
+  width: 22px !important;
+  height: 22px !important;
+}
+
+#eomui-mp3-button.eomui-action-btn .eomui-btn-label {
+  font-weight: 700 !important;
+}
+
+/* 로딩 상태 — 회색 */
+#eomui-mp3-button.eomui-action-btn.loading {
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%) !important;
+  box-shadow: 0 2px 6px rgba(107, 114, 128, 0.4) !important;
+  animation: none !important;
+}
+
+/* 성공 상태 — 초록 */
+#eomui-mp3-button.eomui-action-btn.success {
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%) !important;
+  box-shadow: 0 2px 8px rgba(22, 163, 74, 0.5) !important;
+  animation: eomui-success-bounce 0.5s ease !important;
+}
+
+/* 에러 상태 — 주황 */
+#eomui-mp3-button.eomui-action-btn.error {
+  background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%) !important;
+  box-shadow: 0 2px 8px rgba(234, 88, 12, 0.5) !important;
+  animation: eomui-shake 0.5s ease !important;
+}
+
+@keyframes eomui-pulse {
+  0%, 100% {
+    box-shadow:
+      0 2px 8px rgba(220, 38, 38, 0.35),
+      0 0 0 0 rgba(220, 38, 38, 0.5);
+  }
+  50% {
+    box-shadow:
+      0 2px 8px rgba(220, 38, 38, 0.45),
+      0 0 0 10px rgba(220, 38, 38, 0);
+  }
+}
+
+@keyframes eomui-success-bounce {
+  0% { transform: scale(0.95); }
+  50% { transform: scale(1.06); }
+  100% { transform: scale(1); }
+}
+
+@keyframes eomui-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+/* ===== 스피너 ===== */
+.eomui-spinner {
+  width: 18px !important;
+  height: 18px !important;
+  border: 2.5px solid rgba(255, 255, 255, 0.35) !important;
+  border-top-color: white !important;
+  border-radius: 50% !important;
+  animation: eomui-spin 0.7s linear infinite !important;
+  display: inline-block !important;
+}
+
+@keyframes eomui-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ===== 상태 표시 오버레이 (화면 중앙 하단에 크게 뜸) =====
+   버튼이 액션바에 inline이므로, 상태 메시지는 별도 overlay로 표시 */
+#eomui-mp3-status {
+  position: fixed !important;
+  bottom: 32px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  z-index: 9999999 !important;
+
+  max-width: 420px !important;
+  min-width: 300px !important;
+
+  padding: 20px 24px !important;
+  border-radius: 16px !important;
+
+  font-family: "Malgun Gothic", "맑은 고딕", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  font-size: 17px !important;
+  font-weight: 700 !important;
+  line-height: 1.5 !important;
+
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25) !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+#eomui-mp3-status.eomui-hidden {
+  display: none !important;
+}
+
+#eomui-mp3-status.eomui-visible {
+  display: block !important;
+  animation: eomui-fade-in 0.3s ease !important;
+}
+
+@keyframes eomui-fade-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+#eomui-mp3-status.eomui-loading {
+  background: rgba(219, 234, 254, 0.97) !important;
+  color: #1e3a8a !important;
+  border: 2px solid #60a5fa !important;
+}
+
+#eomui-mp3-status.eomui-success {
+  background: rgba(220, 252, 231, 0.97) !important;
+  color: #14532d !important;
+  border: 2px solid #4ade80 !important;
+}
+
+#eomui-mp3-status.eomui-error {
+  background: rgba(254, 226, 226, 0.97) !important;
+  color: #7f1d1d !important;
+  border: 2px solid #f87171 !important;
+}
+
+#eomui-mp3-status small {
+  font-weight: 600 !important;
+  opacity: 0.85 !important;
+  display: block !important;
+  margin-top: 6px !important;
+  font-size: 14px !important;
+}
+
+#eomui-mp3-status b {
+  font-weight: 800 !important;
+  font-size: 19px !important;
+}
+
+/* ===== 모바일/작은 화면 ===== */
+@media (max-width: 768px) {
+  #eomui-mp3-button.eomui-action-btn {
+    height: 38px !important;
+    min-width: 130px !important;
+    padding: 0 16px !important;
+    font-size: 14px !important;
+    border-radius: 16px !important;
+  }
+  #eomui-mp3-button.eomui-action-btn svg {
+    width: 20px !important;
+    height: 20px !important;
+  }
+  #eomui-mp3-status {
+    bottom: 20px !important;
+    left: 16px !important;
+    right: 16px !important;
+    transform: none !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    font-size: 15px !important;
+    padding: 14px 16px !important;
+  }
+  #eomui-mp3-status b {
+    font-size: 17px !important;
+  }
+  #eomui-mp3-status.eomui-visible {
+    animation: eomui-fade-in-mobile 0.3s ease !important;
+  }
+  @keyframes eomui-fade-in-mobile {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+}

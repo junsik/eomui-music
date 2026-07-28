@@ -1,0 +1,32 @@
+# ── 빌드 산출물 ───────────────────────────────────────────────
+/app/eomui-music.exe
+/installer/output/
+
+# 설치 프로그램에 넣는 외부 실행 파일 (약 200MB).
+# installer/build.ps1 이 없으면 자동으로 내려받는다.
+/installer/bundle/*
+!/installer/bundle/.gitkeep
+
+# ── 실행 중 생기는 파일 ────────────────────────────────────────
+# app/ 에서 직접 실행하면 여기에 떨어진다.
+/app/yt-dlp.exe
+/app/ffmpeg.exe
+/app/deno.exe
+/app/tmp/
+/app/settings.json
+/app/state.json
+/app/music-index.json
+*.log
+
+# 다운로드 중단 흔적
+*.part
+ffmpeg-download.zip
+deno-download.zip
+
+# ── 편집기 / OS ───────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+Thumbs.db
+Desktop.ini
+.DS_Store

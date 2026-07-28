@@ -1,0 +1,26 @@
+Copyright (c) 2026 Junsik Park
+
+All rights reserved.
+
+이 소프트웨어는 개인·가족 사용 목적으로 만든 비공개 프로젝트입니다.
+저작권자의 사전 서면 허가 없이 복제, 배포, 수정, 공개할 수 없습니다.
+
+This software is a private project made for personal and family use.
+No part of it may be copied, distributed, modified, or published
+without the prior written permission of the copyright holder.
+
+이 소프트웨어와 함께 배포되는 외부 프로그램(yt-dlp, FFmpeg, Deno 등)은
+각자의 라이선스를 따르며 위 조건의 적용을 받지 않습니다.
+자세한 내용은 docs/THIRD-PARTY.md 를 참고하십시오.
+
+Third-party programs distributed alongside this software (yt-dlp, FFmpeg,
+Deno, and others) are governed by their own licenses and are not subject
+to the terms above. See docs/THIRD-PARTY.md for details.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
