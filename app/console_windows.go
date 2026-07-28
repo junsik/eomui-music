@@ -4,8 +4,27 @@ package main
 
 import (
         "os"
+        "os/exec"
         "syscall"
 )
+
+// CREATE_NO_WINDOW — 콘솔 프로그램을 창 없이 실행한다.
+const createNoWindow = 0x08000000
+
+// hideConsole은 자식 프로세스의 콘솔 창이 뜨지 않게 한다.
+//
+// 이 프로그램은 GUI 서브시스템이라 자기 콘솔이 없다. 그래서 yt-dlp 나 ffmpeg
+// 같은 콘솔 프로그램을 실행하면 Windows 가 새 콘솔 창을 만들어 준다.
+// 다운로드할 때마다 검은 창이 깜빡이는 원인이다.
+//
+// yt-dlp 가 안에서 부르는 ffmpeg 도 이 설정을 물려받는다.
+func hideConsole(cmd *exec.Cmd) {
+        if cmd.SysProcAttr == nil {
+                cmd.SysProcAttr = &syscall.SysProcAttr{}
+        }
+        cmd.SysProcAttr.HideWindow = true
+        cmd.SysProcAttr.CreationFlags |= createNoWindow
+}
 
 // GUI 서브시스템(-H windowsgui)으로 빌드하면 표준 출력 핸들이 없다.
 // 터미널에서 실행한 경우엔 부모 콘솔에 붙어서 로그가 그대로 보이게 하고,

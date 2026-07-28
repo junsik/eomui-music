@@ -58,6 +58,7 @@ func ytDlpVersion() string {
 
         var out bytes.Buffer
         cmd := exec.CommandContext(ctx, YtDlp, "--version")
+        hideConsole(cmd)
         cmd.Stdout = &out
         if err := cmd.Run(); err != nil {
                 return ""
@@ -90,6 +91,7 @@ func maybeUpdateYtDlp(force bool) {
 
         var out bytes.Buffer
         cmd := exec.CommandContext(ctx, YtDlp, "-U")
+        hideConsole(cmd)
         cmd.Stdout = &out
         cmd.Stderr = &out
 

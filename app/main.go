@@ -276,6 +276,7 @@ func runYtDlp(args []string) ([]byte, error) {
         defer cancel()
 
         cmd := exec.CommandContext(ctx, YtDlp, args...)
+        hideConsole(cmd) // 다운로드할 때마다 검은 창이 깜빡이지 않도록
         var stdout, stderr bytes.Buffer
         cmd.Stdout = &stdout
         cmd.Stderr = &stderr
@@ -707,30 +708,50 @@ func guardAPI(w http.ResponseWriter, r *http.Request) bool {
         return true
 }
 
-// openBrowser opens the system browser to the local server URL.
-// Triggered from the systray menu item "브라우저에서 열기".
+const youtubeURL = "https://www.youtube.com"
+
+// openBrowserTo는 기본 브라우저로 주소를 연다.
+func openBrowserTo(url string) {
+        startHidden(shellOpenCommand(url))
+}
+
+// openBrowser는 음악 목록 화면을 연다.
 func openBrowser() {
-        url := fmt.Sprintf("http://localhost:%s", PORT)
+        openBrowserTo(fmt.Sprintf("http://localhost:%s", PORT))
+}
+
+// shellOpenCommand는 OS 의 기본 프로그램으로 여는 명령을 만든다.
+func shellOpenCommand(target string) *exec.Cmd {
         switch runtime.GOOS {
         case "windows":
-                exec.Command("cmd", "/c", "start", url).Start()
+                return exec.Command("cmd", "/c", "start", "", target)
         case "darwin":
-                exec.Command("open", url).Start()
+                return exec.Command("open", target)
         default:
-                exec.Command("xdg-open", url).Start()
+                return exec.Command("xdg-open", target)
         }
+}
+
+// startHidden은 명령을 콘솔 창 없이 띄운다.
+// cmd /c start 는 그냥 실행하면 검은 창이 깜빡인다.
+func startHidden(cmd *exec.Cmd) {
+        hideConsole(cmd)
+        if err := cmd.Start(); err != nil {
+                log.Printf("[WARN] 실행 실패(%v): %v", cmd.Args, err)
+                return
+        }
+        // 좀비 프로세스가 남지 않도록 종료를 거둬 준다.
+        go cmd.Wait()
 }
 
 // openPath는 폴더면 탐색기로 열고, 파일이면 기본 연결 프로그램으로 연다.
 func openPath(path string) {
-        switch runtime.GOOS {
-        case "windows":
-                exec.Command("explorer.exe", path).Start()
-        case "darwin":
-                exec.Command("open", path).Start()
-        default:
-                exec.Command("xdg-open", path).Start()
+        if runtime.GOOS == "windows" {
+                // explorer.exe 는 파일이면 연결된 기본 프로그램을, 폴더면 탐색기를 연다.
+                startHidden(exec.Command("explorer.exe", path))
+                return
         }
+        startHidden(shellOpenCommand(path))
 }
 
 // toggleAutostart는 자동 실행 등록을 켜고 끄며 메뉴 체크 표시를 맞춘다.
@@ -792,10 +813,12 @@ func onTrayReady() {
                 setTrayTooltip(msg)
         }
 
+        mYouTube := systray.AddMenuItem("유튜브 열기", "음악을 받으러 YouTube 로 이동")
+        mList := systray.AddMenuItem("음악 목록 보기", "받은 곡을 보고 들을 수 있는 화면")
+        systray.AddSeparator()
         mMusic := systray.AddMenuItem("음악 폴더 열기", "받은 음악이 있는 폴더")
         mTidy := systray.AddMenuItem("바탕화면 음악 정리", "바탕화면에 흩어진 MP3를 보관함으로 옮깁니다")
         systray.AddSeparator()
-        mOpen := systray.AddMenuItem("브라우저에서 열기", "http://localhost:8080")
         mLog := systray.AddMenuItem("로그 폴더 열기", "eomui-music.log")
         systray.AddSeparator()
         mAuto := systray.AddMenuItemCheckbox("윈도우 시작할 때 자동 실행",
@@ -806,14 +829,16 @@ func onTrayReady() {
         go func() {
                 for {
                         select {
+                        case <-mYouTube.ClickedCh:
+                                openBrowserTo(youtubeURL)
+                        case <-mList.ClickedCh:
+                                openBrowser()
                         case <-mMusic.ClickedCh:
                                 openPath(musicFolder())
                         case <-mTidy.ClickedCh:
                                 go tidyDesktopWithConfirm()
                         case <-mAuto.ClickedCh:
                                 toggleAutostart(mAuto)
-                        case <-mOpen.ClickedCh:
-                                openBrowser()
                         case <-mLog.ClickedCh:
                                 openPath(BaseDir)
                         case <-mQuit.ClickedCh:

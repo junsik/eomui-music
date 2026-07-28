@@ -99,6 +99,22 @@ Windows 파일 연결에 등록된 기본 음악 앱이 실행되는 것을 실�
 자동 실행(Run 키)에는 `-open`을 붙이지 않습니다.
 로그인할 때마다 브라우저가 뜨면 안 되기 때문입니다.
 
+## 자식 프로세스의 콘솔 창
+
+이 프로그램은 GUI 서브시스템(`-H windowsgui`)이라 자기 콘솔이 없습니다.
+그 상태에서 yt-dlp·ffmpeg 같은 **콘솔 프로그램을 실행하면 Windows가
+새 콘솔 창을 만들어 줍니다.** 다운로드할 때마다 검은 창이 깜빡이는 원인이었습니다.
+
+모든 자식 프로세스에 `CREATE_NO_WINDOW`(+ `HideWindow`)를 붙여 막습니다.
+yt-dlp가 안에서 부르는 ffmpeg도 이 설정을 물려받습니다.
+
+`cmd /c start`(브라우저 열기)도 같은 문제가 있어 함께 처리했습니다.
+
+`conhost.exe` 프로세스 개수로는 확인할 수 없습니다 — 창이 없어도 conhost는
+뜰 수 있기 때문입니다. 실제 top-level 창을 열거해 콘솔 창 클래스
+(`ConsoleWindowClass`, `CASCADIA_HOSTING_WINDOW_CLASS`, `PseudoConsoleWindow`)가
+새로 나타나는지 봐야 합니다.
+
 ## 설치 위치
 
 **`%LOCALAPPDATA%\Programs\어무이음악\`** 입니다. Program Files가 아닙니다.

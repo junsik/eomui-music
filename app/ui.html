@@ -99,13 +99,28 @@
   .more:hover:not(:disabled) { background: #f9fafb; }
 
   .actions { display: grid; gap: .7rem; }
-  .actions button {
+  .actions button, .actions a.btn {
     width: 100%; min-height: 3.8rem;
     background: #fff; color: var(--ink);
     border: 2px solid var(--line);
     text-align: left; padding-left: 1.2rem;
   }
   .actions button:hover:not(:disabled) { background: #f9fafb; }
+
+  /* 음악을 받으러 가는 것이 가장 중요한 동작이라 크고 눈에 띄게 둔다. */
+  a.btn {
+    display: flex; align-items: center;
+    font-size: 1.2rem; font-weight: 700;
+    border-radius: .7rem; text-decoration: none;
+    min-height: 4.2rem;
+  }
+  a.go-youtube {
+    background: var(--rose); color: #fff; border: none;
+    justify-content: center; padding: 0 1rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 3px 10px rgba(225,29,72,.3);
+  }
+  a.go-youtube:hover { background: var(--rose-dark); }
 
   .empty, .note {
     padding: 2rem 1.2rem; text-align: center;
@@ -121,6 +136,10 @@
     <h1>&#9835; 어무이 음악</h1>
     <div class="status" id="status"><span class="dot"></span><span id="statusText">확인 중</span></div>
   </header>
+
+  <a class="btn go-youtube" href="https://www.youtube.com" target="_blank" rel="noopener">
+    &#9654;&nbsp; 유튜브에서 음악 찾기
+  </a>
 
   <div class="songs" id="songs">
     <div class="empty">불러오는 중...</div>
