@@ -257,6 +257,42 @@ func TestAdoptThenOrganizeKeepsRecentOnDesktop(t *testing.T) {
         }
 }
 
+// Windows 경로는 대소문자를 구분하지 않는다. 같은 위치인데 표기만 다르면
+// 제자리에 있는 파일을 옮기려다 이름이 겹쳐 "노래 (2).mp3" 가 되어 버린다.
+func TestOrganizeIgnoresPathCase(t *testing.T) {
+        l := newTestLibrary(t, 12, 30)
+
+        const name = "노래.mp3"
+        path := filepath.Join(DesktopDir, name)
+        if err := os.WriteFile(path, []byte("mp3"), 0644); err != nil {
+                t.Fatal(err)
+        }
+        // 목록에는 대소문자가 다른 표기로 들어 있다 (예전 버전이 기록했거나 손으로 넣은 경우).
+        l.entries = append(l.entries, LibraryEntry{
+                Title:      "노래",
+                Filename:   name,
+                Path:       filepath.Join(strings.ToLower(DesktopDir), name),
+                Downloaded: time.Now(),
+        })
+
+        l.organize()
+
+        if got := l.entries[0].Filename; got != name {
+                t.Fatalf("파일명이 바뀜: %q (기대값 %q)", got, name)
+        }
+        if _, err := os.Stat(path); err != nil {
+                t.Fatalf("원본 파일이 사라짐: %v", err)
+        }
+        entries, _ := os.ReadDir(DesktopDir)
+        if len(entries) != 1 {
+                names := make([]string, 0, len(entries))
+                for _, e := range entries {
+                        names = append(names, e.Name())
+                }
+                t.Fatalf("바탕화면 항목이 %d개로 늘어남: %v", len(entries), names)
+        }
+}
+
 // 같은 이름이 있으면 덮어쓰지 않고 번호를 붙여야 한다.
 func TestUniquePathAvoidsOverwrite(t *testing.T) {
         dir := t.TempDir()

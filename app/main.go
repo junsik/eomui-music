@@ -15,6 +15,7 @@ import (
         "path/filepath"
         "regexp"
         "runtime"
+        "strconv"
         "strings"
         "sync"
         "time"
@@ -28,6 +29,13 @@ import (
 
 //go:embed icon.ico
 var trayIconData []byte
+
+// 큰 글씨·큰 버튼으로 된 시니어용 화면.
+// 네이티브 GUI 툴킷은 cgo 가 붙어 "exe 하나" 구조가 깨지는데,
+// 이미 로컬 서버가 있으므로 HTML 이 더 간단하고 화면 배율도 그대로 따라간다.
+//
+//go:embed ui.html
+var uiHTML []byte
 
 // ============================================================
 // 어무이 음악 다운로더 - Standalone Go Server with System Tray
@@ -80,10 +88,17 @@ var consoleAttached bool
 
 // -console 로 실행하면 콘솔 창을 새로 띄운다.
 // 터미널에서 실행한 경우엔 이 옵션 없이도 그 콘솔에 붙는다.
-func wantsConsole() bool {
+func wantsConsole() bool { return hasArg("console") }
+
+// -open 이면 준비가 끝난 뒤 음악 목록 화면을 브라우저로 연다.
+// 바탕화면·시작 메뉴 바로가기가 이 옵션을 쓴다.
+// 자동 실행(Run 키)에는 붙이지 않는다 — 로그인할 때마다 브라우저가 뜨면 안 된다.
+func wantsOpen() bool { return hasArg("open") }
+
+func hasArg(name string) bool {
         for _, a := range os.Args[1:] {
-                switch a {
-                case "-console", "--console", "/console":
+                switch strings.ToLower(a) {
+                case "-" + name, "--" + name, "/" + name:
                         return true
                 }
         }
@@ -565,8 +580,8 @@ func handleDownload(w http.ResponseWriter, r *http.Request) {
         })
 }
 
-// Minimal "server running" page - NO paste form, NO input.
-// The extension handles all UI; this page only confirms the server is alive.
+// 시니어용 음악 목록 화면. 다운로드는 확장이 하고, 이 화면은
+// 받은 곡을 큰 글씨로 보여 주고 눌러서 듣게 해 준다.
 func handleRoot(w http.ResponseWriter, r *http.Request) {
         addCORS(w, r)
         // If user navigates to any unknown path, return 404 JSON (don't serve HTML)
@@ -577,90 +592,7 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
                 return
         }
         w.Header().Set("Content-Type", "text/html; charset=utf-8")
-        html := `<!DOCTYPE html>
-<html lang="ko">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>어무이 음악 다운로더</title>
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: "Malgun Gothic", "맑은 고딕", sans-serif;
-    background: linear-gradient(135deg, #fdf2f8 0%, #fef3c7 100%);
-    min-height: 100vh;
-    display: flex; align-items: center; justify-content: center;
-    color: #1f2937; padding: 24px;
-  }
-  .card {
-    background: white; border-radius: 24px; padding: 48px 40px;
-    max-width: 480px; width: 100%; text-align: center;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.08);
-  }
-  .icon {
-    width: 80px; height: 80px; margin: 0 auto 20px;
-    background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
-    border-radius: 20px; display: flex; align-items: center; justify-content: center;
-    color: white; font-size: 40px;
-  }
-  h1 { font-size: 26px; color: #111827; margin-bottom: 8px; }
-  .sub { font-size: 16px; color: #6b7280; margin-bottom: 28px; line-height: 1.6; }
-  .status {
-    background: #f0fdf4; border: 2px solid #22c55e; color: #14532d;
-    padding: 14px 18px; border-radius: 12px; font-size: 16px; font-weight: 700;
-    margin-bottom: 20px; display: flex; align-items: center; justify-content: center; gap: 8px;
-  }
-  .dot {
-    width: 12px; height: 12px; background: #22c55e; border-radius: 50%;
-    animation: pulse 1.6s ease-in-out infinite;
-  }
-  @keyframes pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.6; transform: scale(1.2); }
-  }
-  .hint {
-    background: #fef3c7; border-radius: 12px; padding: 16px;
-    font-size: 15px; color: #78350f; line-height: 1.6; text-align: left;
-  }
-  .hint b { color: #92400e; }
-  .small { font-size: 13px; color: #9ca3af; margin-top: 18px; }
-</style>
-</head>
-<body>
-  <div class="card">
-    <div class="icon">&#9835;</div>
-    <h1>어무이 음악 다운로더</h1>
-    <p class="sub">서버가 실행 중입니다</p>
-    <div class="status" id="status"><span class="dot"></span><span id="statusText">실행 중</span></div>
-    <div class="hint">
-      &#128073; <b>이 창은 닫으셔도 됩니다.</b><br><br>
-      YouTube 영상 페이지에서<br>
-      <b>빨간색 "MP3 다운로드" 버튼</b>을 누르면<br>
-      자동으로 바탕화면에 저장됩니다.
-    </div>
-    <p class="small">백그라운드에서 실행 중 &middot; 포트 8080</p>
-  </div>
-<script>
-// 준비(yt-dlp/ffmpeg 내려받기)가 끝날 때까지 진행 상황을 보여 준다.
-async function poll() {
-  try {
-    const s = await (await fetch("/api/status")).json();
-    const box = document.getElementById("status");
-    document.getElementById("statusText").textContent =
-      s.ready ? "실행 중" : (s.setup || "준비 중");
-    box.style.background = s.ready ? "#f0fdf4" : "#fffbeb";
-    box.style.borderColor = s.ready ? "#22c55e" : "#f59e0b";
-    box.style.color = s.ready ? "#14532d" : "#78350f";
-    if (!s.ready) setTimeout(poll, 2000);
-  } catch (e) {
-    setTimeout(poll, 3000);
-  }
-}
-poll();
-</script>
-</body>
-</html>`
-        w.Write([]byte(html))
+        w.Write(uiHTML)
 }
 
 func handleStatus(w http.ResponseWriter, r *http.Request) {
@@ -679,6 +611,102 @@ func handleStatus(w http.ResponseWriter, r *http.Request) {
         })
 }
 
+// handleSongs는 받은 곡 목록을 최신순으로 나눠서 돌려준다.
+// 수백 곡이어도 첫 화면이 짧도록 offset/limit 으로 잘라 보낸다.
+func handleSongs(w http.ResponseWriter, r *http.Request) {
+        if !guardAPI(w, r) {
+                return
+        }
+        offset, _ := strconv.Atoi(r.URL.Query().Get("offset"))
+        limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
+        if err != nil || limit <= 0 || limit > 200 {
+                limit = 20
+        }
+
+        songs, total := library.page(offset, limit)
+        json.NewEncoder(w).Encode(map[string]interface{}{
+                "songs":  songs,
+                "total":  total,
+                "offset": offset,
+        })
+}
+
+// handlePlay는 곡을 기본 음악 앱으로 연다.
+// 브라우저는 로컬 파일을 직접 실행할 수 없으므로 서버가 대신 연다.
+func handlePlay(w http.ResponseWriter, r *http.Request) {
+        if !guardAPI(w, r) {
+                return
+        }
+        path := r.URL.Query().Get("path")
+
+        // 아무 경로나 열어 주면 안 된다. 우리가 관리하는 곡인지 확인한다.
+        if !library.hasPath(path) {
+                log.Printf("[WARN] 목록에 없는 파일 재생 요청: %q", path)
+                w.WriteHeader(http.StatusForbidden)
+                json.NewEncoder(w).Encode(map[string]string{"error": "목록에 없는 파일입니다."})
+                return
+        }
+        if _, err := os.Stat(path); err != nil {
+                w.WriteHeader(http.StatusNotFound)
+                json.NewEncoder(w).Encode(map[string]string{"error": "파일을 찾을 수 없습니다."})
+                return
+        }
+
+        log.Printf("[INFO] 재생: %s", path)
+        openPath(path)
+        json.NewEncoder(w).Encode(map[string]bool{"success": true})
+}
+
+func handleOpenFolder(w http.ResponseWriter, r *http.Request) {
+        if !guardAPI(w, r) {
+                return
+        }
+        openPath(musicFolder())
+        json.NewEncoder(w).Encode(map[string]bool{"success": true})
+}
+
+// handleTidy는 바탕화면에 흩어진 MP3 를 정리한다.
+// 확인은 화면에서 이미 받았으므로 여기서는 대화상자를 띄우지 않는다.
+func handleTidy(w http.ResponseWriter, r *http.Request) {
+        if !guardAPI(w, r) {
+                return
+        }
+        added, failed := library.adoptLooseDesktopFiles()
+        library.organize()
+        onDesktop, archived := library.counts()
+
+        log.Printf("[INFO] 화면에서 정리 실행: %d곡 등록, 바탕화면 %d곡 / 보관함 %d곡",
+                added, onDesktop, archived)
+
+        json.NewEncoder(w).Encode(map[string]interface{}{
+                "success":   true,
+                "added":     added,
+                "failed":    failed,
+                "onDesktop": onDesktop,
+                "archived":  archived,
+        })
+}
+
+// guardAPI는 모든 API 핸들러가 공통으로 하는 앞단 처리를 맡는다.
+// 계속 진행해도 되면 true 를 돌려준다.
+func guardAPI(w http.ResponseWriter, r *http.Request) bool {
+        addCORS(w, r)
+        if r.Method == http.MethodOptions {
+                w.WriteHeader(http.StatusNoContent)
+                return false
+        }
+        w.Header().Set("Content-Type", "application/json; charset=utf-8")
+
+        if !fromOurExtension(r) {
+                w.WriteHeader(http.StatusForbidden)
+                json.NewEncoder(w).Encode(map[string]string{
+                        "error": "이 프로그램의 화면에서만 사용할 수 있습니다.",
+                })
+                return false
+        }
+        return true
+}
+
 // openBrowser opens the system browser to the local server URL.
 // Triggered from the systray menu item "브라우저에서 열기".
 func openBrowser() {
@@ -693,8 +721,8 @@ func openBrowser() {
         }
 }
 
-// openFolder opens a folder in the system file manager.
-func openFolder(path string) {
+// openPath는 폴더면 탐색기로 열고, 파일이면 기본 연결 프로그램으로 연다.
+func openPath(path string) {
         switch runtime.GOOS {
         case "windows":
                 exec.Command("explorer.exe", path).Start()
@@ -779,7 +807,7 @@ func onTrayReady() {
                 for {
                         select {
                         case <-mMusic.ClickedCh:
-                                openFolder(musicFolder())
+                                openPath(musicFolder())
                         case <-mTidy.ClickedCh:
                                 go tidyDesktopWithConfirm()
                         case <-mAuto.ClickedCh:
@@ -787,7 +815,7 @@ func onTrayReady() {
                         case <-mOpen.ClickedCh:
                                 openBrowser()
                         case <-mLog.ClickedCh:
-                                openFolder(BaseDir)
+                                openPath(BaseDir)
                         case <-mQuit.ClickedCh:
                                 log.Println("[INFO] 사용자가 트레이에서 종료 클릭")
                                 systray.Quit()
@@ -811,9 +839,12 @@ func main() {
         consoleAttached = attachConsole(wantsConsole())
 
         // 두 벌이 뜨면 두 번째는 포트를 못 잡아 트레이만 떠 있는 상태가 된다.
+        // 이미 돌고 있으면 음악 목록 화면만 열어 주고 조용히 빠진다 —
+        // 어머니가 바로가기를 다시 누른 경우 "이미 실행 중" 창보다 이쪽이 자연스럽다.
         if !claimSingleInstance() {
-                infoDialog("어무이 음악 다운로더",
-                        "이미 실행 중입니다.\n\n트레이(작업 표시줄 우측 하단 시계 옆)에\n🎵 아이콘이 있는지 확인해 주세요.")
+                // 로그 파일은 아직 열기 전이다. 콘솔로 실행했다면 여기 찍힌다.
+                log.Println("[INFO] 이미 실행 중 — 음악 목록 화면만 열고 종료합니다")
+                openBrowser()
                 return
         }
 
@@ -850,6 +881,10 @@ func main() {
 
         http.HandleFunc("/api/download", handleDownload)
         http.HandleFunc("/api/status", handleStatus)
+        http.HandleFunc("/api/songs", handleSongs)
+        http.HandleFunc("/api/play", handlePlay)
+        http.HandleFunc("/api/open-folder", handleOpenFolder)
+        http.HandleFunc("/api/tidy", handleTidy)
         http.HandleFunc("/", handleRoot)
 
         // 받은 음악 목록을 불러오고, 바탕화면에 넘치는 곡을 보관함으로 내린다.
@@ -874,6 +909,13 @@ func main() {
                 }
                 log.Printf("🎵 어무이 음악 다운로드 서버 시작: http://localhost:%s", PORT)
                 log.Printf("📋 트레이 아이콘 우클릭으로 종료하세요.")
+
+                // 바로가기로 실행한 경우에만 화면을 띄운다.
+                // 서버가 뜬 뒤에 열어야 빈 페이지가 보이지 않는다.
+                if wantsOpen() {
+                        openBrowser()
+                }
+
                 if err := http.Serve(ln, nil); err != nil {
                         log.Printf("ERROR: server failed: %v", err)
                 }

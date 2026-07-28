@@ -7,6 +7,7 @@ import (
         "os"
         "path/filepath"
         "regexp"
+        "runtime"
         "sort"
         "strings"
         "sync"
@@ -62,6 +63,19 @@ func extractVideoID(rawURL string) string {
                 return m[1]
         }
         return ""
+}
+
+// samePath는 두 경로가 같은 곳을 가리키는지 본다.
+//
+// Windows 파일 시스템은 대소문자를 구분하지 않는다. 문자열로만 비교하면
+// "...\desktop" 과 "...\Desktop" 을 다른 곳으로 보고, 제자리에 있는 파일을
+// 옮기려 하다가 이름이 겹쳐 "노래 (2).mp3" 로 바꿔 버린다.
+func samePath(a, b string) bool {
+        a, b = filepath.Clean(a), filepath.Clean(b)
+        if runtime.GOOS == "windows" {
+                return strings.EqualFold(a, b)
+        }
+        return a == b
 }
 
 // ===== 설정 / 목록 파일 =====
@@ -202,7 +216,7 @@ func (l *Library) organize() {
                         wantDir = archiveDir(e.Downloaded)
                 }
 
-                if filepath.Dir(e.Path) != wantDir {
+                if !samePath(filepath.Dir(e.Path), wantDir) {
                         newPath, err := moveInto(e.Path, wantDir)
                         if err != nil {
                                 // 재생 중이라 잠겨 있을 수 있다. 다음 정리 때 다시 시도한다.
@@ -306,13 +320,73 @@ func (l *Library) adoptLooseDesktopFiles() (int, int) {
         return added, failed
 }
 
+// SongView는 웹 화면에 보여 줄 한 곡의 정보다.
+type SongView struct {
+        Title      string `json:"title"`
+        Path       string `json:"path"`
+        Where      string `json:"where"`      // "바탕화면" 또는 "2026년 07월"
+        Downloaded string `json:"downloaded"` // 2026-07-29
+}
+
+// page는 최신순으로 정렬한 곡 목록의 일부를 돌려준다.
+// 수백 곡이어도 첫 화면이 짧도록 나눠서 보낸다.
+func (l *Library) page(offset, limit int) ([]SongView, int) {
+        l.mu.Lock()
+        defer l.mu.Unlock()
+
+        sort.SliceStable(l.entries, func(i, j int) bool {
+                return l.entries[i].Downloaded.After(l.entries[j].Downloaded)
+        })
+
+        total := len(l.entries)
+        if offset < 0 || offset >= total {
+                return []SongView{}, total
+        }
+        end := offset + limit
+        if limit <= 0 || end > total {
+                end = total
+        }
+
+        out := make([]SongView, 0, end-offset)
+        for _, e := range l.entries[offset:end] {
+                where := "바탕화면"
+                if dir := filepath.Dir(e.Path); !samePath(dir, DesktopDir) {
+                        where = filepath.Base(dir)
+                }
+                out = append(out, SongView{
+                        Title:      strings.TrimSuffix(e.Filename, filepath.Ext(e.Filename)),
+                        Path:       e.Path,
+                        Where:      where,
+                        Downloaded: e.Downloaded.Format("2006-01-02"),
+                })
+        }
+        return out, total
+}
+
+// hasPath는 이 경로가 우리가 관리하는 곡인지 확인한다.
+// 재생 요청에서 아무 경로나 열어 주지 않기 위한 검사다.
+func (l *Library) hasPath(path string) bool {
+        if path == "" {
+                return false
+        }
+        l.mu.Lock()
+        defer l.mu.Unlock()
+
+        for i := range l.entries {
+                if strings.EqualFold(l.entries[i].Path, path) {
+                        return true
+                }
+        }
+        return false
+}
+
 // counts는 지금 바탕화면에 있는 곡 수와 보관함에 있는 곡 수를 센다.
 func (l *Library) counts() (onDesktop, archived int) {
         l.mu.Lock()
         defer l.mu.Unlock()
 
         for i := range l.entries {
-                if filepath.Dir(l.entries[i].Path) == DesktopDir {
+                if samePath(filepath.Dir(l.entries[i].Path), DesktopDir) {
                         onDesktop++
                 } else {
                         archived++

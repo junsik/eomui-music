@@ -58,7 +58,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 ; 언어 접두사를 붙이지 않으면 선택된 언어와 무관하게 적용된다.
 ; 이 프로그램은 한국어 전용이라 마법사 언어가 무엇이든 본문은 한국어로 둔다.
 AutoStartTask=윈도우 시작할 때 자동으로 실행 (권장)
-DesktopIconTask=바탕화면에 아이콘 만들기
+DesktopIconTask=바탕화면에 "어무이 음악" 아이콘 만들기 (권장)
 OpenExtFolder=크롬 확장 프로그램 폴더 열기
 
 [Tasks]
@@ -83,10 +83,13 @@ Source: "bundle\ffmpeg-LICENSE.txt"; DestDir: "{app}"; Flags: ignoreversion skip
 Source: "{#ExtDir}\*"; DestDir: "{app}\크롬확장"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{group}\{#AppName}"; Filename: "{app}\{#ExeName}"
+; -open 을 붙이면 음악 목록 화면이 브라우저로 열린다.
+; 꺼져 있으면 실행하면서 열고, 이미 켜져 있으면 화면만 연다.
+; 자동 실행(Run 키)에는 이 옵션을 붙이지 않는다 — 로그인마다 브라우저가 뜨면 안 된다.
+Name: "{group}\{#AppName}"; Filename: "{app}\{#ExeName}"; Parameters: "-open"
 Name: "{group}\{cm:OpenExtFolder}"; Filename: "{app}\크롬확장"
 Name: "{group}\{cm:UninstallProgram,{#AppName}}"; Filename: "{uninstallexe}"
-Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#ExeName}"; Tasks: desktopicon
+Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#ExeName}"; Parameters: "-open"; Tasks: desktopicon
 
 [Registry]
 ; 자동 실행. HKCU 라서 관리자 권한이 필요 없고 어무이 세션에서 실행된다.
@@ -96,7 +99,8 @@ Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; \
     Flags: uninsdeletevalue; Tasks: autostart
 
 [Run]
-Filename: "{app}\{#ExeName}"; Description: "{cm:LaunchProgram,{#AppName}}"; \
+Filename: "{app}\{#ExeName}"; Parameters: "-open"; \
+    Description: "{cm:LaunchProgram,{#AppName}}"; \
     Flags: nowait postinstall skipifsilent
 
 [UninstallDelete]

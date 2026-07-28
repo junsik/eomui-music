@@ -14,6 +14,7 @@ go test ./...
 | 파일 | 역할 |
 |---|---|
 | `main.go` | HTTP 핸들러, 트레이 메뉴, 다운로드 흐름 |
+| `ui.html` | 시니어용 음악 목록 화면 (`//go:embed`로 exe에 포함) |
 | `bootstrap.go` | yt-dlp/ffmpeg/deno 확인·다운로드, 준비 상태 |
 | `library.go` | 받은 곡 목록, 바탕화면 정리, 중복 판정 |
 | `updater.go` | yt-dlp 주기적 자동 갱신 |
