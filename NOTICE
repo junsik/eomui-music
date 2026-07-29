@@ -1,0 +1,45 @@
+어무이 음악 다운로더
+Copyright (c) 2026 Junsik Park
+
+이 저장소의 코드는 MIT 라이선스입니다 (LICENSE 참고).
+
+설치 프로그램에는 아래 프로그램이 함께 담겨 있습니다.
+이들은 각자의 라이선스를 따르며 MIT 조건의 적용을 받지 않습니다.
+
+  yt-dlp   Unlicense (퍼블릭 도메인)   https://github.com/yt-dlp/yt-dlp
+  FFmpeg   GPL v3                      https://www.gyan.dev/ffmpeg/builds/
+  Deno     MIT                         https://github.com/denoland/deno
+
+이 프로그램은 FFmpeg 와 링크하지 않습니다. yt-dlp 를 별도 프로세스로 실행하고
+yt-dlp 가 다시 ffmpeg 를 별도 프로세스로 실행합니다. 프로세스 경계를 두고
+명령줄로만 주고받으므로 단순 병합(mere aggregation)에 해당하며, 이 저장소의
+코드는 GPL 의 적용을 받지 않습니다.
+
+다만 GPL 바이너리를 재배포하는 의무는 별개로 이행합니다.
+FFmpeg 대응 소스를 받는 방법은 다음에 있습니다.
+
+  docs/THIRD-PARTY.md
+  설치 폴더의 ffmpeg-source-offer.txt
+  릴리스 페이지의 첨부 파일
+
+
+---
+
+Eomui Music Downloader
+Copyright (c) 2026 Junsik Park
+
+The code in this repository is licensed under the MIT License (see LICENSE).
+
+The installer additionally bundles the following programs, which are governed
+by their own licenses and are not covered by the MIT terms:
+
+  yt-dlp   Unlicense (public domain)
+  FFmpeg   GPL v3
+  Deno     MIT
+
+This software does not link against FFmpeg. It invokes yt-dlp as a separate
+process, which in turn invokes ffmpeg as a separate process. This constitutes
+mere aggregation, so the code in this repository is not subject to the GPL.
+
+Obligations for redistributing the GPL binary are fulfilled separately.
+See docs/THIRD-PARTY.md for FFmpeg's corresponding source offer.

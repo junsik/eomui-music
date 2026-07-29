@@ -91,6 +91,7 @@ Source: "bundle\deno.exe";   DestDir: "{app}"; Flags: onlyifdoesntexist
 Source: "bundle\ffmpeg-LICENSE.txt"; DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist
 Source: "ffmpeg-source-offer.txt";  DestDir: "{app}"; Flags: ignoreversion
 Source: "..\LICENSE";               DestDir: "{app}"; DestName: "LICENSE.txt"; Flags: ignoreversion
+Source: "..\NOTICE";                DestDir: "{app}"; DestName: "NOTICE.txt";  Flags: ignoreversion
 
 ; 크롬 확장은 수동으로 불러와야 해서 같이 설치해 둔다.
 Source: "{#ExtDir}\*"; DestDir: "{app}\크롬확장"; Flags: ignoreversion recursesubdirs createallsubdirs

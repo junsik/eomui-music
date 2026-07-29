@@ -65,7 +65,7 @@ go build -ldflags="-s -w -H windowsgui" -o eomui-music.exe .
 
 ## 라이선스
 
-이 저장소의 코드는 **MIT** 라이선스입니다 — [LICENSE](LICENSE).
+이 저장소의 코드는 **MIT** 라이선스입니다 — [LICENSE](LICENSE) · [NOTICE](NOTICE).
 
 설치 프로그램에는 **FFmpeg(GPL v3)** · yt-dlp(Unlicense) · Deno(MIT)가
 함께 담겨 있고, 이들은 각자의 라이선스를 따릅니다.

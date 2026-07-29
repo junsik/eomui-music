@@ -19,19 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
----
-
-이 MIT 라이선스는 이 저장소에 담긴 코드에만 적용됩니다.
-
-설치 프로그램에는 FFmpeg(GPL v3), yt-dlp(Unlicense), Deno(MIT)가 함께
-담겨 있습니다. 이들은 각자의 라이선스를 따르며 위 조건의 적용을 받지 않습니다.
-특히 FFmpeg는 GPL v3이므로 소스 제공 고지가 별도로 붙습니다.
-자세한 내용은 docs/THIRD-PARTY.md 를 보십시오.
-
-This MIT license applies only to the code in this repository.
-
-The installer additionally bundles FFmpeg (GPL v3), yt-dlp (Unlicense), and
-Deno (MIT). Those are governed by their own licenses and are not covered by
-the terms above. See docs/THIRD-PARTY.md, including the written offer for
-FFmpeg's corresponding source.
