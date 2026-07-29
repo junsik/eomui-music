@@ -65,6 +65,13 @@ go build -ldflags="-s -w -H windowsgui" -o eomui-music.exe .
 
 ## 라이선스
 
-개인·가족 사용 목적으로 만든 비공개 프로젝트입니다. [LICENSE](LICENSE) 참고.
-함께 배포하는 외부 프로그램은 각자의 라이선스를 따릅니다 —
-[docs/THIRD-PARTY.md](docs/THIRD-PARTY.md).
+이 저장소의 코드는 **MIT** 라이선스입니다 — [LICENSE](LICENSE).
+
+설치 프로그램에는 **FFmpeg(GPL v3)** · yt-dlp(Unlicense) · Deno(MIT)가
+함께 담겨 있고, 이들은 각자의 라이선스를 따릅니다.
+FFmpeg의 대응 소스를 받는 방법을 포함한 자세한 내용은
+[docs/THIRD-PARTY.md](docs/THIRD-PARTY.md)에 있습니다.
+
+이 프로그램은 FFmpeg와 링크하지 않고 별도 프로세스로 실행하므로
+코드 자체는 GPL의 적용을 받지 않습니다. 다만 GPL 바이너리를 재배포하는 의무는
+별개로 이행합니다.

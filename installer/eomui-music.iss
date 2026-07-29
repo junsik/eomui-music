@@ -60,6 +60,9 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 AutoStartTask=윈도우 시작할 때 자동으로 실행 (권장)
 DesktopIconTask=바탕화면에 "어무이 음악" 아이콘 만들기 (권장)
 OpenExtFolder=크롬 확장 프로그램 폴더 열기
+ExtGuide=크롬 확장 설치 안내
+ShowGuide=크롬 확장 등록 방법 보기 (필수 — 안 하면 버튼이 안 나옵니다)
+OpenExtFolderNow=크롬 확장 폴더를 탐색기로 열기
 
 [Tasks]
 Name: "autostart"; Description: "{cm:AutoStartTask}"
@@ -67,7 +70,13 @@ Name: "desktopicon"; Description: "{cm:DesktopIconTask}"
 
 [Files]
 Source: "{#SrcDir}\{#ExeName}"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#SrcDir}\README.md";  DestDir: "{app}"; Flags: ignoreversion isreadme
+Source: "{#SrcDir}\README.md";  DestDir: "{app}"; Flags: ignoreversion
+
+; 크롬 확장 등록 안내. 크롬 정책상 이 단계는 자동화할 수 없어서,
+; 안 알려 주면 설치는 됐는데 YouTube 에 버튼이 안 나타나는 상태가 된다.
+; 자기 위치에서 확장 폴더 경로를 계산해 보여 주므로 설치 경로와 무관하게 정확하다.
+Source: "extension-guide.html"; DestDir: "{app}"; DestName: "크롬확장-설치안내.html"; \
+    Flags: ignoreversion
 
 ; 필수 실행 파일을 함께 넣는다. 첫 실행 때 약 170MB 를 내려받지 않아도 된다.
 ; gyan.dev 의 ffmpeg 다운로드가 매우 느려 어무이 PC 에서 실패할 위험이 크다.
@@ -76,8 +85,12 @@ Source: "{#SrcDir}\README.md";  DestDir: "{app}"; Flags: ignoreversion isreadme
 Source: "bundle\yt-dlp.exe"; DestDir: "{app}"; Flags: onlyifdoesntexist
 Source: "bundle\ffmpeg.exe"; DestDir: "{app}"; Flags: onlyifdoesntexist
 Source: "bundle\deno.exe";   DestDir: "{app}"; Flags: onlyifdoesntexist
-; ffmpeg essentials 빌드는 GPL 이라 재배포 시 라이선스를 함께 둔다.
+; ffmpeg essentials 빌드는 GPL v3 라 재배포 시 라이선스 전문과
+; 대응 소스를 받는 방법을 함께 제공해야 한다 (GPL v3 제6조).
+; 저장소를 안 보고 설치 파일만 받은 사람도 볼 수 있어야 하므로 여기에 넣는다.
 Source: "bundle\ffmpeg-LICENSE.txt"; DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist
+Source: "ffmpeg-source-offer.txt";  DestDir: "{app}"; Flags: ignoreversion
+Source: "..\LICENSE";               DestDir: "{app}"; DestName: "LICENSE.txt"; Flags: ignoreversion
 
 ; 크롬 확장은 수동으로 불러와야 해서 같이 설치해 둔다.
 Source: "{#ExtDir}\*"; DestDir: "{app}\크롬확장"; Flags: ignoreversion recursesubdirs createallsubdirs
@@ -87,6 +100,7 @@ Source: "{#ExtDir}\*"; DestDir: "{app}\크롬확장"; Flags: ignoreversion recur
 ; 꺼져 있으면 실행하면서 열고, 이미 켜져 있으면 화면만 연다.
 ; 자동 실행(Run 키)에는 이 옵션을 붙이지 않는다 — 로그인마다 브라우저가 뜨면 안 된다.
 Name: "{group}\{#AppName}"; Filename: "{app}\{#ExeName}"; Parameters: "-open"
+Name: "{group}\{cm:ExtGuide}"; Filename: "{app}\크롬확장-설치안내.html"
 Name: "{group}\{cm:OpenExtFolder}"; Filename: "{app}\크롬확장"
 Name: "{group}\{cm:UninstallProgram,{#AppName}}"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#ExeName}"; Parameters: "-open"; Tasks: desktopicon
@@ -99,6 +113,12 @@ Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; \
     Flags: uninsdeletevalue; Tasks: autostart
 
 [Run]
+; 마지막 화면의 체크박스. 위에서부터 순서대로 실행된다.
+; 확장 등록은 크롬 정책상 자동화할 수 없으므로, 안내와 폴더를 함께 열어 준다.
+Filename: "{app}\크롬확장-설치안내.html"; Description: "{cm:ShowGuide}"; \
+    Flags: postinstall shellexec nowait skipifsilent
+Filename: "{app}\크롬확장"; Description: "{cm:OpenExtFolderNow}"; \
+    Flags: postinstall shellexec nowait skipifsilent
 Filename: "{app}\{#ExeName}"; Parameters: "-open"; \
     Description: "{cm:LaunchProgram,{#AppName}}"; \
     Flags: nowait postinstall skipifsilent
