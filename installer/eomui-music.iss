@@ -4,7 +4,7 @@
 ; 결과: installer\output\eomui-music-setup.exe
 
 #define AppName "어무이 음악 다운로더"
-#define AppVersion "1.4.0"
+#define AppVersion "1.4.1"
 #define AppPublisher "개인 제작"
 #define ExeName "eomui-music.exe"
 #define SrcDir "..\app"
